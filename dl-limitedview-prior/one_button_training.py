@@ -45,7 +45,7 @@ print(args)
 
 # Prepare different starting datasets
 dataset_dict,theta_dict = {}, {}
-dataset_dict['4_0'] = '/home/bmkelly/xct-parallelbeam-matlab/dataset_v4_50D_Nonneg_NonIC_Noise_0/'
+dataset_dict['4_0'] = '/home/shenghua/DL-recon/xct-parallelbeam-matlab/dataset_v4_50D_Nonneg_NonIC_Noise_0/'
 theta_dict['4_0'] = 50
 dataset_dict['5'] = '/home/bmkelly/xct-parallelbeam-matlab/dataset_v5_50D_IC_Noise_TVC/'
 theta_dict['5'] = 50
@@ -69,10 +69,11 @@ if num_gpus==2:
 	os.environ["CUDA_VISIBLE_DEVICES"] = str(which_gpu) + ',' + str(which_gpu+1)
 	print('Env: ' + os.environ["CUDA_VISIBLE_DEVICES"])
 if num_gpus==1:
+	which_gpu=3
 	os.environ["CUDA_VISIBLE_DEVICES"] = str(which_gpu)
 name = args.name
 skipping_first_iteration = args.skipping_first_iteration
-num_per_worker=10
+num_per_worker = 10
 
 batch_size = args.batch_size
 
@@ -81,24 +82,38 @@ for i in range(num_stages):
 	range_i.append(i)
 
 # folder for this training run:
-
 def send_message(message):
 	print('********************************************************')
 	print(message)
 	print('********************************************************')
 
 
-
 for i in range_i[args.start_index_for_loop:]:
+	print('------------- stage '+str(i)+' begins...-----------------------')
 	name_of_run = name
 	stage_name = name+str(i)
 	mf = 'training_runs/' + name_of_run + '/'
 
 	save_dir = stage_name + '_AD/'
+	
 
 	#### Train model ####
 	# Set number of GPUS:
 	if i ==0:
+		### Generate new dataset with AD_files
+		send_message('Generating Initial Training Dataset')
+		### Generate new dataset with AD_files
+		DIRNAME = dataset_dict[dataset]
+		trainf = 'datasets/v' + dataset+ '_train/'
+		testf = 'datasets/v' + dataset+ '_test/'
+		testFinalf = 'datasets/v' + dataset+ '_testFinal/'
+	
+		ntrain=750
+		ntest=150
+		ntestFinal = 100
+# 		AD_path = AD_folder
+		hf.make_dataset(trainf,testf,testFinalf,ntrain,ntest,ntestFinal,DIRNAME,AD_path=None,num_std_away=100)
+		
 		train_command = 'python3 train7_resnet.py --nb_filters ' + str(nb_filters)+  \
 			' --depth ' + str(depth) + ' --batch_size ' + str(batch_size) + ' --dataset ' + dataset + ' --nb_epochs ' + str(nb_epochs) +\
 			' --name ' + stage_name + ' --num_gpus ' + str(args.num_gpus)
@@ -111,7 +126,10 @@ for i in range_i[args.start_index_for_loop:]:
 	pretrained_model_addition = ''
 	if i>0:
 		pretrained_model_addition = ' --pretrained_model ' + mf + 'stage' + str(i-1) + '_model/best_simple'
+
 	if not (skipping_first_iteration!=0 and i==range_i[args.start_index_for_loop]):
+		print('#######pretraining#######')
+		print((skipping_first_iteration,i))
 		send_message('Attempting to train with this command: ' + train_command + pretrained_model_addition)
 		os.system(train_command + pretrained_model_addition)
 
@@ -119,15 +137,17 @@ for i in range_i[args.start_index_for_loop:]:
 	#### Find and move best model to transfer over ####
 	# Saving/Moving best model, a new training plot/data, visualization of filters
 	model_folder = mf + 'stage' + str(i) + '_model/'
+#	os.system(train_command)
 	os.system(train_command + ' --just_return_name True')
-	with open('/home/bmkelly/dl-limitedview-prior/tmp.out','r') as infile:
+ 
+	with open('/home/shenghua/DL-recon/dl-limitedview-prior/tmp.out','r') as infile:
 		model_name = infile.readline()
-
 
 	new_folder = model_folder
 	hf.generate_folder(new_folder)
 	old_folder = 'projection_results7/' + model_name + '/'
 
+	print('------------- stage '+str(i)+' training ends!!-----------------------')
 	# Eventual AD directory on turing
 	AD_folder = 'datasets/v' + save_dir
 
@@ -142,12 +162,12 @@ for i in range_i[args.start_index_for_loop:]:
 			f.write('#!/bin/bash\n') # This has to be here
 			f.write('#PBS -l nodes=1:ppn=1,walltime=03:59:00\n') # resources
 			f.write('#PBS -N ' + file_name +'\n') # name of run
-			f.write('#PBS -m be\n') # Email when the job begins and ends 
+			#f.write('#PBS -m be\n') # Email when the job begins and ends 
 			f.write('#PBS -e log -o log\n') # Store PBS log files in a separate directory 
 			f.write('#PBS -t 0-' + str(int(num_AD/num_per_worker)) + '\n') # Request an array of worker
 			f.write('\n')
 			f.write('IMG_NAME="singularity-ubuntu16.04-tf1.0-gpu-python3_VERSION3.img"\n')
-			f.write('cd /scratch/bmkelly \n')
+			f.write('cd /scratch/shenghuahe \n')
 			f.write('module load singularity\n')
 			f.write('module load cuda-8.0\n')
 			f.write('echo "PBS_ARRAYID:" $PBS_ARRAYID\n')
@@ -176,7 +196,7 @@ for i in range_i[args.start_index_for_loop:]:
 		### Move dataset over?
 		if move_dataset==1 and this_run==0:
 			send_message('Moving dataset over: ' + dataset_folder)
-			os.system('scp -r ' + dataset_folder + ' bmkelly@dtn01.chpc.wustl.edu:/scratch/bmkelly/datasets/')
+			os.system('scp -r ' + dataset_folder + ' shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/datasets/')
 	
 		send_message('Moving model files around, in order to ship over to chpc')
 		# Locate important files:
@@ -213,16 +233,16 @@ for i in range_i[args.start_index_for_loop:]:
 
 		### Move .batch file over
 		run_file_name = generate_run_file()
-		os.system('scp ' + run_file_name + ' bmkelly@dtn01.chpc.wustl.edu:/scratch/bmkelly/batch_files')
+		os.system('scp ' + run_file_name + ' shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/batch_files')
 
 		### Move model folder over
-		os.system('scp -r ' + new_folder + ' bmkelly@dtn01.chpc.wustl.edu:/scratch/bmkelly/models/' + stage_name)
+		os.system('scp -r ' + new_folder + ' shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/models/' + stage_name)
 
 		### Make directory for the AD files to be transfered into:
 		hf.generate_folder(AD_folder)
 
 		###  Create AD folder on CHPC to put files into
-		os.system('ssh bmkelly@dtn01.chpc.wustl.edu "mkdir /scratch/bmkelly/' + AD_folder + '"')
+		os.system('ssh shenghuahe@login.chpc.wustl.edu "mkdir /scratch/shenghuahe/' + AD_folder + '"')
 
 		return model
 
@@ -235,7 +255,7 @@ for i in range_i[args.start_index_for_loop:]:
 		
 		send_message('Calling batchfile on chpc')
 		### Call batchfile
-		os.system('ssh bmkelly@login01.chpc.wustl.edu "qsub /scratch/bmkelly/batch_files/'+stage_name+'.batch"')
+		os.system('ssh shenghuahe@login.chpc.wustl.edu "qsub /scratch/shenghuahe/batch_files/'+stage_name+'.batch"')
 
 	# if not (skipping_first_iteration!=0 and i==0):
 # 		send_message('Generating Experimental results')
@@ -250,7 +270,7 @@ for i in range_i[args.start_index_for_loop:]:
 
 # if 1==1 or ...: - 
 	if not (skipping_first_iteration !=0 and i==range_i[args.start_index_for_loop]):
-		os.system('scp -r bmkelly@dtn01.chpc.wustl.edu:/scratch/bmkelly/' + AD_folder[0:-1] + ' datasets/')
+		os.system('scp -r shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/' + AD_folder[0:-1] + ' datasets/')
 		# If we are training for another round:
 		send_message('Waiting for AD folder to contain ' + str(num_AD))
 		### Wait until AD_folder contains 900 files, or close to 900 files
@@ -260,7 +280,7 @@ for i in range_i[args.start_index_for_loop:]:
 		while len(glob.glob(AD_folder + '*.pkl')) < (num_AD/num_per_worker) - 10:
 			print('Sleeping for ' + str(sleep_time) + ' seconds.  Len directory: ' + str(len(glob.glob(AD_folder + '*.pkl'))) +'. Directory: ' + AD_folder)
 			time.sleep(sleep_time)  # Delay for hour
-			os.system('scp -r bmkelly@dtn01.chpc.wustl.edu:/scratch/bmkelly/' + AD_folder[0:-1] + ' datasets/')
+			os.system('scp -r shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/' + AD_folder[0:-1] + ' datasets/')
 
 
 		send_message('Generating New Dataset')

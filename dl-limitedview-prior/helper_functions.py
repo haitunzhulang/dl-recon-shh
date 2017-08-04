@@ -593,69 +593,72 @@ def normalize_data(data_in,mmin=-1,mmax=1,cant_be_0s=False):
     return data_out
 
 def run_model_generator(model,dataset='23',nb_epoch=50,batch_size=32,plot_folder ='PLS_Out/',callbacks=[],verbose=1,AD=True,num_gpus=4,non_generator=0):
-    
-    val_loss = []
-    
-    # checkpoint
-    filepath=plot_folder + model.name + "/weights-improvement-{epoch:02d}-{loss:.2f}.hdf5"
-    callbacks_list = []
-    generate_folder(plot_folder + model.name)
-    
-    for c in callbacks:
-        callbacks_list.append(c)
-        
-    num_train_samples = 750
-    if AD:
-        num_val_samples=150
-    else:
-        num_val_samples=150
-    
-    if 1==0 and AD ==True: # Load data on the fly
-        tmp_history = model.fit_generator(generator(batch_size=batch_size,input_shape=model.input_shape,output_shape=model.output_shape,dataset=dataset,train=True,AD=AD), nb_epoch=nb_epoch, samples_per_epoch = num_train_samples,
-              verbose=verbose,validation_data=generator(batch_size=batch_size,input_shape=model.input_shape,output_shape=model.output_shape,dataset=dataset,train=False,AD=AD),nb_val_samples=int(num_val_samples/batch_size),callbacks=callbacks_list,pickle_safe=True,nb_worker=2*num_gpus,max_q_size=10*num_gpus)
-    else: # Load data into memory
-        X_train,Y_train,X_test,Y_test = generator_load_all(input_shape=model.input_shape,output_shape=model.output_shape,dataset=dataset,AD=AD)
-        tmp_history = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
-                      verbose=verbose, validation_data=(X_test, Y_test),shuffle=True,callbacks=callbacks_list)
-    # 
-#     
-#     # Fit the model    
-#     if dataset ==23:
-#         
-# #     if dataset==19:
-# #         tmp_history = model.fit_generator(v19_train(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(7000*10/batch_size), nb_epoch=nb_epoch,
-# #               verbose=verbose,validation_data=v19_test(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(2000/batch_size),callbacks=callbacks_list)
-# 
-#     if dataset==19:
-#         tmp_history = model.fit_generator(v19_train_AD(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(122403*2/batch_size), nb_epoch=nb_epoch,
-#               verbose=verbose,validation_data=v19_test_AD(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(8149/batch_size),callbacks=callbacks_list,pickle_safe=True,nb_worker=20,max_q_size=100)
-# 
-#     
-#     # if dataset==25:
-# #         tmp_history = model.fit_generator(v25_train(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(10408*1/batch_size), nb_epoch=nb_epoch,
-# #               verbose=verbose,validation_data=v25_test(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(2000/batch_size),callbacks=callbacks_list)
-# 
-#     if dataset==25:
-#         tmp_history = model.fit_generator(v25_train_AD(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(143081*2/batch_size), nb_epoch=nb_epoch,
-#               verbose=verbose,validation_data=v25_test_AD(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(8509/batch_size),callbacks=callbacks_list,pickle_safe=True,nb_worker=20,max_q_size=100)
-# 
-# 
-#     if dataset==27:
-#         tmp_history = model.fit_generator(v27_train(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(10408*10/batch_size), nb_epoch=nb_epoch,
-#               verbose=verbose,validation_data=v27_test(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(2000/batch_size),callbacks=callbacks_list)
-# 
-#     if dataset==28:
-#         tmp_history = model.fit_generator(v28_train(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(7500*10/batch_size), nb_epoch=nb_epoch,
-#               verbose=verbose,validation_data=v28_test(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(1500/batch_size),callbacks=callbacks_list)
 
-    
-    loss = tmp_history.history['loss']
-    val_loss = tmp_history.history['val_loss']
-        
-    
-    K.clear_session()
-    
-    return val_loss[len(val_loss)-1]
+	val_loss = []
+
+	# checkpoint
+	filepath=plot_folder + model.name + "/weights-improvement-{epoch:02d}-{loss:.2f}.hdf5"
+	callbacks_list = []
+	generate_folder(plot_folder + model.name)
+
+	for c in callbacks:
+		callbacks_list.append(c)
+	
+	num_train_samples = 750
+	if AD:
+		num_val_samples=150
+	else:
+		num_val_samples=150
+	if 1==0 and AD ==True:
+		# Load data on the fly
+		print('###load data on the fly###')
+		tmp_history = model.fit_generator(generator(batch_size=batch_size,input_shape=model.input_shape,output_shape=model.output_shape,dataset=dataset,train=True,AD=AD), nb_epoch=nb_epoch, samples_per_epoch = num_train_samples,
+			  verbose=verbose,validation_data=generator(batch_size=batch_size,input_shape=model.input_shape,output_shape=model.output_shape,dataset=dataset,train=False,AD=AD),nb_val_samples=int(num_val_samples/batch_size),callbacks=callbacks_list,pickle_safe=True,nb_worker=2*num_gpus,max_q_size=10*num_gpus)
+	else:
+		# Load data into memory
+		print('###load data into memory###')
+		X_train,Y_train,X_test,Y_test = generator_load_all(input_shape=model.input_shape,output_shape=model.output_shape,dataset=dataset,AD=AD)
+		tmp_history = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+					  verbose=verbose, validation_data=(X_test, Y_test),shuffle=True,callbacks=callbacks_list)
+	# 
+	#     
+	#     # Fit the model    
+	#     if dataset ==23:
+	#         
+	# #     if dataset==19:
+	# #         tmp_history = model.fit_generator(v19_train(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(7000*10/batch_size), nb_epoch=nb_epoch,
+	# #               verbose=verbose,validation_data=v19_test(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(2000/batch_size),callbacks=callbacks_list)
+	# 
+	#     if dataset==19:
+	#         tmp_history = model.fit_generator(v19_train_AD(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(122403*2/batch_size), nb_epoch=nb_epoch,
+	#               verbose=verbose,validation_data=v19_test_AD(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(8149/batch_size),callbacks=callbacks_list,pickle_safe=True,nb_worker=20,max_q_size=100)
+	# 
+	#     
+	#     # if dataset==25:
+	# #         tmp_history = model.fit_generator(v25_train(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(10408*1/batch_size), nb_epoch=nb_epoch,
+	# #               verbose=verbose,validation_data=v25_test(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(2000/batch_size),callbacks=callbacks_list)
+	# 
+	#     if dataset==25:
+	#         tmp_history = model.fit_generator(v25_train_AD(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(143081*2/batch_size), nb_epoch=nb_epoch,
+	#               verbose=verbose,validation_data=v25_test_AD(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(8509/batch_size),callbacks=callbacks_list,pickle_safe=True,nb_worker=20,max_q_size=100)
+	# 
+	# 
+	#     if dataset==27:
+	#         tmp_history = model.fit_generator(v27_train(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(10408*10/batch_size), nb_epoch=nb_epoch,
+	#               verbose=verbose,validation_data=v27_test(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(2000/batch_size),callbacks=callbacks_list)
+	# 
+	#     if dataset==28:
+	#         tmp_history = model.fit_generator(v28_train(batch_size,model.input_shape,model.output_shape), samples_per_epoch = int(7500*10/batch_size), nb_epoch=nb_epoch,
+	#               verbose=verbose,validation_data=v28_test(batch_size,model.input_shape,model.output_shape),nb_val_samples=int(1500/batch_size),callbacks=callbacks_list)
+
+
+	loss = tmp_history.history['loss']
+	val_loss = tmp_history.history['val_loss']
+	
+
+	K.clear_session()
+
+	return val_loss[len(val_loss)-1]
 
 
 ## returns val_loss

@@ -29,7 +29,7 @@ for i in range(len(nb_filters)):
 	if SAFE:
 		print( 'python3 one_button_training.py --nb_filters ' + str(nb_filters[i]) + ' --dataset ' + dataset + ' --depth ' + str(depth) + ' --which_gpu ' + str(which_gpu) + ' --name ' + which_name + ' --move_dataset ' + move_dataset)
 	else:
-		os.system('nohup python3 one_button_training.py --nb_filters ' + str(nb_filters[i]) + ' --dataset ' + dataset + ' --depth ' + str(depth) + ' --which_gpu ' + str(which_gpu) + ' --name ' + which_name + ' --move_dataset ' + move_dataset + ' 2>&1&')
+	os.system('nohup python3 one_button_training.py --nb_filters ' + str(nb_filters[i]) + ' --dataset ' + dataset + ' --depth ' + str(depth) + ' --which_gpu ' + str(which_gpu) + ' --name ' + which_name + ' --move_dataset ' + move_dataset + ' 2>&1&')
 	
 
 for i in range(len(nb_filters)):

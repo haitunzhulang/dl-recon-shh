@@ -158,9 +158,6 @@ def get_args():
 	args = parser.parse_args()
 	return args
 
-
-
-
 args = get_args()
 print(args)
 
@@ -176,8 +173,6 @@ def get_model_name(args=args):
 		'_nbfilters_' + str(args.nb_filters) + \
 		'_name_' + args.name
 	return name
-
-
 
 input_shape = (args.dimension,args.dimension,1)
 
@@ -195,13 +190,14 @@ if args.pretrained_model is not None:
 
 
 print('model name: ' + model.name)
-
+print('#######checking ...#######')
 if args.just_return_name:
-	with open('/home/bmkelly/dl-limitedview-prior/tmp.out', 'w') as outfile:
+	with open('/home/shenghua/DL-recon/dl-limitedview-prior/tmp.out', 'w') as outfile:
 		outfile.write(get_model_name())
-	
+	print('#######system exits#######')	
 	sys.exit()
 
+print('#####continue#######')
 opt = Adam(lr=args.lr)
 #opt = SGD(lr=args.min_lr, momentum=0.9, decay=0.0001, nesterov=True)
 loss_weights = []

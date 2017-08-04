@@ -60,7 +60,8 @@ end
 
 % Check if output directory exists.
 if (~isdir(output_dirname))
-    error('Output directory should already exist.');
+%    error('Output directory should already exist.');
+	mkdir(output_dirname)
 end
 
 
