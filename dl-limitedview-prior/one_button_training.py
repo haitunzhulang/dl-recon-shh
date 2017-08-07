@@ -166,7 +166,7 @@ for i in range_i[args.start_index_for_loop:]:
 			f.write('#PBS -e log -o log\n') # Store PBS log files in a separate directory 
 			f.write('#PBS -t 0-' + str(int(num_AD/num_per_worker)) + '\n') # Request an array of worker
 			f.write('\n')
-			f.write('IMG_NAME="singularity-ubuntu16.04-tf1.0-gpu-python3_VERSION3.img"\n')
+			f.write('IMG_NAME="singularity-ubuntu16.04-tf1.0-gpu-python3.img"\n')
 			f.write('cd /scratch/shenghuahe \n')
 			f.write('module load singularity\n')
 			f.write('module load cuda-8.0\n')
