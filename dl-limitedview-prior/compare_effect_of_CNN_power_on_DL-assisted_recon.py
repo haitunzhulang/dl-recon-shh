@@ -96,6 +96,7 @@ print('nohup python3 one_button_training.py --nb_filters ' + str(nb_filters) + \
 # python3 one_button_training.py --nb_filters 42 --dataset 6 --depth 10 --which_gpu 1 --name Experiment_4_42_ --move_dataset 0 --num_stages 4 --batch_size 32 --num_AD 1000
 # python3 one_button_training.py --nb_filters 48 --dataset 6 --depth 10 --which_gpu 0 --name Experiment_4_48_ --move_dataset 0 --num_stages 4 --batch_size 32 --num_AD 1000
 
+#command='python3 one_button_training.py --nb_filters 64 --dataset 6 --depth 20 --which_gpu 0 --num_gpus 2 --name Experiment_4_64_ --move_dataset 1 --num_stages 10 --batch_size 32'
 
 
 

@@ -49,7 +49,7 @@ poolobj = gcp('nocreate');
 delete(poolobj);
 % Somehow check if we already have a parpool going...
 
-num_workers=6; 
+num_workers=5; 
 parpool('local',num_workers);
 % makedir dataset_v7_120/
 

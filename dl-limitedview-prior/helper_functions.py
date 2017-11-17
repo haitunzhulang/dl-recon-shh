@@ -609,7 +609,7 @@ def run_model_generator(model,dataset='23',nb_epoch=50,batch_size=32,plot_folder
 		num_val_samples=150
 	else:
 		num_val_samples=150
-	if 1==0 and AD ==True:
+	if 0==0 and AD ==True:
 		# Load data on the fly
 		print('###load data on the fly###')
 		tmp_history = model.fit_generator(generator(batch_size=batch_size,input_shape=model.input_shape,output_shape=model.output_shape,dataset=dataset,train=True,AD=AD), nb_epoch=nb_epoch, samples_per_epoch = num_train_samples,
@@ -617,6 +617,7 @@ def run_model_generator(model,dataset='23',nb_epoch=50,batch_size=32,plot_folder
 	else:
 		# Load data into memory
 		print('###load data into memory###')
+		print('###data set:'+dataset)
 		X_train,Y_train,X_test,Y_test = generator_load_all(input_shape=model.input_shape,output_shape=model.output_shape,dataset=dataset,AD=AD)
 		tmp_history = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
 					  verbose=verbose, validation_data=(X_test, Y_test),shuffle=True,callbacks=callbacks_list)
@@ -2028,12 +2029,14 @@ def generator_load_all(input_shape=(None,176,176,1),output_shape=(None,154,154,1
         ending='_AD/'
     else:
         ending='/'
-    
+    print('Generate training data!')
     # Train
     mypath = main_directory+ 'v' + dataset + '_'+ 'train' + ending
+    print(mypath)
     X_train,Y_train = load_entire_dataset(mypath,input_shape,output_shape)
     # Test
     mypath = main_directory+ 'v' + dataset + '_'+ 'test' + ending
+    print(mypath)
     X_test,Y_test = load_entire_dataset(mypath,input_shape,output_shape)
     
     return X_train,Y_train,X_test,Y_test
@@ -2045,7 +2048,7 @@ def load_entire_dataset(mypath,input_shape,output_shape):
     list_files = [mypath + f for f in listdir(mypath) if isfile(join(mypath, f))]
     X = []
     Y = []
-
+    print('file number:'+str(len(list_files)))
     for i in range(len(list_files)):
         with open(list_files[i], 'rb') as f:
             data = pickle.load(f)
@@ -2058,7 +2061,7 @@ def load_entire_dataset(mypath,input_shape,output_shape):
             Y.append(fix_Ys(data['Y'],output_shape))
         
         # Fix up the X/Ys if they are not exactly the correct size
-    
+    print('---data load--')
     X = np.asarray(X)
     Y = np.asarray(Y)
     return X,Y

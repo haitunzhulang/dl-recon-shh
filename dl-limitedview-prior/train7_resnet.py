@@ -140,7 +140,7 @@ class generateImageCallback(Callback):
 
 def get_args():
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--nb_filters", type=int, default=54)
+	parser.add_argument("--nb_filters", type=int, default=64)
 	parser.add_argument("--nb_epochs", type=int, default=1000)
 	parser.add_argument("--lr",type=float,default=.001)
 	parser.add_argument("--loss",type=str,default='mse')

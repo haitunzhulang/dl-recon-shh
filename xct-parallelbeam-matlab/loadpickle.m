@@ -10,7 +10,7 @@ function [a] =  loadpickle(filename)
 %% Filename  : loadpickle.m 
 
 
-tempname = '/home/bmkelly/xct-parallelbeam-matlab/tmp/tmp_1';
+tempname = '/home/shenghua/DL-recon/xct-parallelbeam-matlab/tmp/tmp_1';
 
 if ~exist(filename,'file')
     error('%s is not a file',filename);

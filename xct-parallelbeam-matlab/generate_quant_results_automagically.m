@@ -18,7 +18,8 @@ function generate_quant_results_automagically()
 % name_of_exp = 'Experiment_7_12_';
 % name_of_exp = 'Experiment_3_0_';
 % name_of_exp = 'Experiment_2_6_';
-name_of_exp = 'Experiment_4_24_';
+% name_of_exp = 'Experiment_4_24_';
+name_of_exp = 'Experiment_4_64_';
 %% 1. Showcase loss plots from each of the available stageX_model folders
 % name_of_exp = 'Experiment_4_12_';
 % name_of_exp = 'Experiment_4_24_';
@@ -46,7 +47,7 @@ end;
 %% 2.  Showcase result images from different stages -- need to pull this out of datasets
 index = 77; % validation image
 
-stage=0;
+stage=2;
 pickle_file = ['../dl-limitedview-prior/datasets/v' ...
     name_of_exp num2str(stage) '_AD' ...
     '/' num2str(index) '.pkl' ];
@@ -87,10 +88,11 @@ clf;
 [ha1,pos] = tight_subplot(4,8,[.03 .005],[.01 .01],[.001 .001]);
 set(gcf,'Position',[2 223 1293 736]);
 
+
 for index=start_index:end_index
     stage=2;
     pickle_file = ['../dl-limitedview-prior/datasets/v' ...
-        name_of_exp num2str(3) '_AD' ...
+        name_of_exp num2str(2) '_AD' ...
         '/' num2str(index) '.pkl' ];
     if exist(pickle_file,'file')>0
         M = loadpickle(pickle_file);
@@ -99,12 +101,12 @@ for index=start_index:end_index
         end;
         
         mean_squared_error = mean(mean((M.X_train-M.y_train).^2,2),3);
+        size(mean_squared_error)
         for i=1:10
             results_before(1+(start_index-index)*10+(i-1),:) = mean_squared_error(1+32*(i-1):2:1+32*i-2);
             results_after(1+(start_index-index)*10+(i-1),:) = mean_squared_error(2+32*(i-1):2:2+32*i-2);
-            
-            
-            
+            size(results_before)
+                        
             figure(7);
             for j=1:32
                 axes(ha1(j));
@@ -118,6 +120,7 @@ for index=start_index:end_index
             axes(ha(1));
             hold on;
             plot(results_before(1+(start_index-index)*10+(i-1),:),'ro-');
+            hold on;
             plot(results_after(1+(start_index-index)*10+(i-1),:),'bo-');
             xlabel('Each of the 16 projections');
             ylabel('MSE');
@@ -141,16 +144,19 @@ end;
 
 
 %% 3.2  Calculating the MSE for different projection numbers
-name_of_exp = 'Experiment_4_12_';
+name_of_exp = 'Experiment_4_64_';
 available_model_folders = dir(['../dl-limitedview-prior/training_runs/' name_of_exp '/*_model']);
 start_index = 75; % validation image
 end_index = 100;
-% stage=0;
+stage=2;
 
 results_before = zeros([1 16 length(available_model_folders)]);
 results_after = zeros([1 16 length(available_model_folders)]);
 
 for model=0:length(available_model_folders)-1
+    if model==1
+        continue
+    end
  
     for index=start_index:end_index
 
@@ -181,8 +187,7 @@ results_before_total = results_before;
 results_after_total = results_after;
 
 %% 3.2 Continute: Calculate statistics given results_before/after
-
-
+name_of_exp = 'Experiment_4_64_';
 figure(5);
 clf;
 for i=1:length(available_model_folders)

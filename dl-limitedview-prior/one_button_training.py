@@ -22,7 +22,7 @@ def get_args():
 	parser.add_argument("--which_gpu",type=int,default=0)
 	parser.add_argument("--num_gpus",type=int,default=1)
 	parser.add_argument("--num_stages",type=int,default=5)
-	parser.add_argument("--nb_epochs",type=int,default=3000)
+	parser.add_argument("--nb_epochs",type=int,default=40)
 	parser.add_argument("--name",type=str,default='third')
 	parser.add_argument("--batch_size",type=int,default=16)
 	parser.add_argument("--move_dataset",type=int,default=1)
@@ -49,9 +49,9 @@ dataset_dict['4_0'] = '/home/shenghua/DL-recon/xct-parallelbeam-matlab/dataset_v
 theta_dict['4_0'] = 50
 dataset_dict['5'] = '/home/bmkelly/xct-parallelbeam-matlab/dataset_v5_50D_IC_Noise_TVC/'
 theta_dict['5'] = 50
-dataset_dict['6'] = '/home/bmkelly/xct-parallelbeam-matlab/dataset_v5_50D_IC_Noise_TVC/'
+dataset_dict['6'] = '/home/shenghua/DL-recon/xct-parallelbeam-matlab/dataset_v5_100D_noIC_Noise/'
 dataset_dict['7_1k'] = '/home/bmkelly/xct-parallelbeam-matlab/dataset_v7_80D_IC_Noise_TVC/'
-theta_dict['6'] = 50
+theta_dict['6'] = 100
 theta_dict['7_1k'] = 80
 
 nb_filters = args.nb_filters
@@ -66,10 +66,11 @@ num_stages=args.num_stages
 nb_epochs = args.nb_epochs
 theta=theta_dict[dataset]
 if num_gpus==2:
-	os.environ["CUDA_VISIBLE_DEVICES"] = str(which_gpu) + ',' + str(which_gpu+1)
+#	os.environ["CUDA_VISIBLE_DEVICES"] = str(which_gpu) + ',' + str(which_gpu+1)+ ',' + str(which_gpu+2)+ ',' + str(which_gpu+3)
+	os.environ["CUDA_VISIBLE_DEVICES"] = str(which_gpu+2) + ',' + str(which_gpu+3)
 	print('Env: ' + os.environ["CUDA_VISIBLE_DEVICES"])
 if num_gpus==1:
-	which_gpu=3
+	which_gpu=0
 	os.environ["CUDA_VISIBLE_DEVICES"] = str(which_gpu)
 name = args.name
 skipping_first_iteration = args.skipping_first_iteration
@@ -108,9 +109,9 @@ for i in range_i[args.start_index_for_loop:]:
 		testf = 'datasets/v' + dataset+ '_test/'
 		testFinalf = 'datasets/v' + dataset+ '_testFinal/'
 	
-		ntrain=750
-		ntest=150
-		ntestFinal = 100
+		ntrain=7500
+		ntest=1000
+		ntestFinal = 500
 # 		AD_path = AD_folder
 		hf.make_dataset(trainf,testf,testFinalf,ntrain,ntest,ntestFinal,DIRNAME,AD_path=None,num_std_away=100)
 		
@@ -196,7 +197,7 @@ for i in range_i[args.start_index_for_loop:]:
 		### Move dataset over?
 		if move_dataset==1 and this_run==0:
 			send_message('Moving dataset over: ' + dataset_folder)
-			os.system('scp -r ' + dataset_folder + ' shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/datasets/')
+			os.system('scp -r ' + dataset_folder + ' shenghuahe@dtn01.chpc.wustl.edu:/scratch/shenghuahe/datasets/')
 	
 		send_message('Moving model files around, in order to ship over to chpc')
 		# Locate important files:
@@ -233,16 +234,16 @@ for i in range_i[args.start_index_for_loop:]:
 
 		### Move .batch file over
 		run_file_name = generate_run_file()
-		os.system('scp ' + run_file_name + ' shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/batch_files')
+		os.system('scp ' + run_file_name + ' shenghuahe@dtn01.chpc.wustl.edu:/scratch/shenghuahe/batch_files')
 
 		### Move model folder over
-		os.system('scp -r ' + new_folder + ' shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/models/' + stage_name)
+		os.system('scp -r ' + new_folder + ' shenghuahe@dtn01.chpc.wustl.edu:/scratch/shenghuahe/models/' + stage_name)
 
 		### Make directory for the AD files to be transfered into:
 		hf.generate_folder(AD_folder)
 
 		###  Create AD folder on CHPC to put files into
-		os.system('ssh shenghuahe@login.chpc.wustl.edu "mkdir /scratch/shenghuahe/' + AD_folder + '"')
+		os.system('ssh shenghuahe@dtn01.chpc.wustl.edu "mkdir /scratch/shenghuahe/' + AD_folder + '"')
 
 		return model
 
@@ -255,7 +256,7 @@ for i in range_i[args.start_index_for_loop:]:
 		
 		send_message('Calling batchfile on chpc')
 		### Call batchfile
-		os.system('ssh shenghuahe@login.chpc.wustl.edu "qsub /scratch/shenghuahe/batch_files/'+stage_name+'.batch"')
+		os.system('ssh shenghuahe@dtn01.chpc.wustl.edu "qsub /scratch/shenghuahe/batch_files/'+stage_name+'.batch"')
 
 	# if not (skipping_first_iteration!=0 and i==0):
 # 		send_message('Generating Experimental results')
@@ -270,7 +271,12 @@ for i in range_i[args.start_index_for_loop:]:
 
 # if 1==1 or ...: - 
 	if not (skipping_first_iteration !=0 and i==range_i[args.start_index_for_loop]):
-		os.system('scp -r shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/' + AD_folder[0:-1] + ' datasets/')
+		if not i==0:
+			last_AD_folder='datasets/v'+name+str(i-1)+'_AD/'
+			os.system('rm -rf ' + last_AD_folder[0:-1])
+			last_AD_folder='datasets/v'+name+str(i-1)+'_train_AD/'
+			os.system('rm -rf ' + last_AD_folder[0:-1])
+		os.system('scp -r shenghuahe@dtn01.chpc.wustl.edu:/scratch/shenghuahe/' + AD_folder[0:-1] + ' datasets/')
 		# If we are training for another round:
 		send_message('Waiting for AD folder to contain ' + str(num_AD))
 		### Wait until AD_folder contains 900 files, or close to 900 files
@@ -280,9 +286,8 @@ for i in range_i[args.start_index_for_loop:]:
 		while len(glob.glob(AD_folder + '*.pkl')) < (num_AD/num_per_worker) - 10:
 			print('Sleeping for ' + str(sleep_time) + ' seconds.  Len directory: ' + str(len(glob.glob(AD_folder + '*.pkl'))) +'. Directory: ' + AD_folder)
 			time.sleep(sleep_time)  # Delay for hour
-			os.system('scp -r shenghuahe@login.chpc.wustl.edu:/scratch/shenghuahe/' + AD_folder[0:-1] + ' datasets/')
-
-
+			os.system('scp -r shenghuahe@dtn01.chpc.wustl.edu:/scratch/shenghuahe/' + AD_folder[0:-1] + ' datasets/')
+			
 		send_message('Generating New Dataset')
 		### Generate new dataset with AD_files
 		DIRNAME = dataset_dict[dataset]
@@ -290,9 +295,9 @@ for i in range_i[args.start_index_for_loop:]:
 		testf = 'datasets/v' + stage_name+ '_test_AD/'
 		testFinalf = 'datasets/v' + stage_name+ '_testFinal_AD/'
 	
-		ntrain=750
-		ntest=150
-		ntestFinal = 100
+		ntrain=7500
+		ntest=1000
+		ntestFinal = 500
 		AD_path = AD_folder
 		hf.make_dataset(trainf,testf,testFinalf,ntrain,ntest,ntestFinal,DIRNAME,AD_path=AD_path,num_std_away=100)
 
